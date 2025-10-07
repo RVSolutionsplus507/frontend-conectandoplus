@@ -16,28 +16,28 @@ export interface Card {
 }
 
 export interface GameState {
-  id?: string
-  phase?: GamePhase
+  id: string
+  phase: GamePhase
   currentPlayerId?: string
-  currentPlayerIndex?: number
-  players?: string[]
-  scores?: Record<string, number>
-  currentCard?: Card | null
-  usedCards?: string[]
-  cardPiles?: {
+  currentPlayerIndex: number
+  players: string[]
+  scores: Record<string, number>
+  currentCard: Card | null
+  usedCards: string[]
+  cardPiles: {
     RC: Card[]
     AC: Card[]
     E: Card[]
     CE: Card[]
   }
-  settings?: {
+  settings: {
     maxPlayers: number
-    targetScore?: number
-    timeLimit?: number
+    targetScore: number
+    timeLimit: number
     allowedCategories?: CardCategory[]
   }
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt: Date
+  updatedAt: Date
   status?: 'WAITING' | 'IN_PROGRESS' | 'FINISHED'
   round?: number
   timeRemaining?: number

@@ -18,12 +18,12 @@ interface CardDisplayProps {
 export function CardDisplay({ card, isCurrentPlayerTurn }: CardDisplayProps) {
   const { settings, answerQuestion, skipCard } = useGameStore()
   const [selectedAnswer, setSelectedAnswer] = useState<string>('')
-  const [timeLeft, setTimeLeft] = useState(settings.timeLimit || 30)
+  const [timeLeft, setTimeLeft] = useState(settings.timeLimit)
   const [hasAnswered, setHasAnswered] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
 
   useEffect(() => {
-    setTimeLeft(settings.timeLimit || 30)
+    setTimeLeft(settings.timeLimit)
     setHasAnswered(false)
     setIsCorrect(null)
     setSelectedAnswer('')
@@ -98,7 +98,7 @@ export function CardDisplay({ card, isCurrentPlayerTurn }: CardDisplayProps) {
           </div>
         </div>
         {isCurrentPlayerTurn && !hasAnswered && (
-          <Progress value={((timeLeft ?? 0) / (settings.timeLimit || 30)) * 100} className="h-2" />
+          <Progress value={((timeLeft ?? 0) / (settings?.timeLimit || 30)) * 100} className="h-2" />
         )}
       </CardHeader>
       

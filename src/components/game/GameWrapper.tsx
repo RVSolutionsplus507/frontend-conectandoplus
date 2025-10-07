@@ -85,5 +85,5 @@ export function GameWrapper(props: GameWrapperProps) {
     )
   }
 
-  return <GameRoom {...props} gameRoom={props.gameRoom} />
+  return <GameRoom roomCode={props.roomCode} />
 }
