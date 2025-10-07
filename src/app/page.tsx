@@ -14,7 +14,7 @@ export default function Home() {
 
   // Renderizar dashboard según el rol del usuario
   if (currentPlayer.role === 'ADMIN') {
-    return <AdminDashboard player={currentPlayer} />
+    return <AdminDashboard />
   }
 
   return <PlayerDashboard player={currentPlayer} />
