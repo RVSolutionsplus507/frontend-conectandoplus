@@ -10,7 +10,6 @@ interface SparklesProps {
   id?: string;
   className?: string;
   background?: string;
-  particleSize?: number;
   minSize?: number;
   maxSize?: number;
   speed?: number;
@@ -23,7 +22,6 @@ export const SparklesCore = (props: SparklesProps) => {
     id,
     className,
     background,
-    particleSize,
     minSize,
     maxSize,
     speed,
@@ -70,6 +68,7 @@ export const SparklesCore = (props: SparklesProps) => {
               enable: false,
               zIndex: 1,
             },
+
             fpsLimit: 120,
             interactivity: {
               events: {
@@ -81,7 +80,7 @@ export const SparklesCore = (props: SparklesProps) => {
                   enable: false,
                   mode: "repulse",
                 },
-                resize: true,
+                resize: true as never,
               },
               modes: {
                 push: {
@@ -96,17 +95,9 @@ export const SparklesCore = (props: SparklesProps) => {
             particles: {
               bounce: {
                 horizontal: {
-                  random: {
-                    enable: false,
-                    minimumValue: 0.1,
-                  },
                   value: 1,
                 },
                 vertical: {
-                  random: {
-                    enable: false,
-                    minimumValue: 0.1,
-                  },
                   value: 1,
                 },
               },
@@ -116,17 +107,9 @@ export const SparklesCore = (props: SparklesProps) => {
                 },
                 bounce: {
                   horizontal: {
-                    random: {
-                      enable: false,
-                      minimumValue: 0.1,
-                    },
                     value: 1,
                   },
                   vertical: {
-                    random: {
-                      enable: false,
-                      minimumValue: 0.1,
-                    },
                     value: 1,
                   },
                 },
@@ -144,26 +127,29 @@ export const SparklesCore = (props: SparklesProps) => {
                   h: {
                     count: 0,
                     enable: false,
-                    offset: 0,
                     speed: 1,
                     decay: 0,
+                    delay: 0,
                     sync: true,
+                    offset: 0,
                   },
                   s: {
                     count: 0,
                     enable: false,
-                    offset: 0,
                     speed: 1,
                     decay: 0,
+                    delay: 0,
                     sync: true,
+                    offset: 0,
                   },
                   l: {
                     count: 0,
                     enable: false,
-                    offset: 0,
                     speed: 1,
                     decay: 0,
+                    delay: 0,
                     sync: true,
+                    offset: 0,
                   },
                 },
               },
@@ -191,34 +177,15 @@ export const SparklesCore = (props: SparklesProps) => {
                 direction: "none",
                 drift: 0,
                 enable: true,
-                gravity: {
-                  acceleration: 9.81,
-                  enable: false,
-                  inverse: false,
-                  maxSpeed: 50,
-                },
-                path: {
-                  clamp: true,
-                  delay: {
-                    random: {
-                      enable: false,
-                      minimumValue: 0,
-                    },
-                    value: 0,
-                  },
-                  enable: false,
-                  options: {},
-                },
                 outModes: {
                   default: "out",
-                  bottom: "out",
-                  left: "out",
-                  right: "out",
-                  top: "out",
                 },
                 random: false,
                 size: false,
-                speed: speed || 1,
+                speed: {
+                  min: 0.1,
+                  max: 1,
+                },
                 spin: {
                   acceleration: 0,
                   enable: false,
@@ -238,27 +205,27 @@ export const SparklesCore = (props: SparklesProps) => {
                   width: 400,
                   height: 400,
                 },
-                limit: 0,
+                limit: {
+                  mode: "delete",
+                  value: 0,
+                },
                 value: particleDensity || 120,
               },
               opacity: {
-                random: {
-                  enable: true,
-                  minimumValue: 0.4,
-                },
                 value: {
-                  min: 0.4,
+                  min: 0.1,
                   max: 1,
                 },
                 animation: {
                   count: 0,
                   enable: true,
-                  speed: speed || 1,
+                  speed: speed || 4,
                   decay: 0,
+                  delay: 0,
                   sync: false,
-                  destroy: "none",
+                  mode: "auto",
                   startValue: "random",
-                  minimumValue: 0.4,
+                  destroy: "none",
                 },
               },
               reduceDuplicates: false,
@@ -280,33 +247,26 @@ export const SparklesCore = (props: SparklesProps) => {
                 type: "circle",
               },
               size: {
-                random: {
-                  enable: true,
-                  minimumValue: minSize || 0.5,
-                },
                 value: {
-                  min: minSize || 0.5,
-                  max: maxSize || 1.5,
+                  min: minSize || 1,
+                  max: maxSize || 3,
                 },
                 animation: {
                   count: 0,
                   enable: false,
                   speed: 5,
                   decay: 0,
+                  delay: 0,
                   sync: false,
-                  destroy: "none",
+                  mode: "auto",
                   startValue: "random",
-                  minimumValue: 0.3,
+                  destroy: "none",
                 },
               },
               stroke: {
                 width: 0,
               },
               zIndex: {
-                random: {
-                  enable: false,
-                  minimumValue: 0,
-                },
                 value: 0,
                 opacityRate: 1,
                 sizeRate: 1,
@@ -318,17 +278,9 @@ export const SparklesCore = (props: SparklesProps) => {
                 split: {
                   count: 1,
                   factor: {
-                    random: {
-                      enable: false,
-                      minimumValue: 0,
-                    },
                     value: 3,
                   },
                   rate: {
-                    random: {
-                      enable: false,
-                      minimumValue: 0,
-                    },
                     value: {
                       min: 4,
                       max: 9,
@@ -351,10 +303,6 @@ export const SparklesCore = (props: SparklesProps) => {
                 speed: 25,
               },
               tilt: {
-                random: {
-                  enable: false,
-                  minimumValue: 0,
-                },
                 value: 0,
                 animation: {
                   enable: false,
@@ -388,27 +336,15 @@ export const SparklesCore = (props: SparklesProps) => {
               life: {
                 count: 0,
                 delay: {
-                  random: {
-                    enable: false,
-                    minimumValue: 0,
-                  },
                   value: 0,
                   sync: false,
                 },
                 duration: {
-                  random: {
-                    enable: false,
-                    minimumValue: 0.0001,
-                  },
                   value: 0,
                   sync: false,
                 },
               },
               rotate: {
-                random: {
-                  enable: false,
-                  minimumValue: 0,
-                },
                 value: 0,
                 animation: {
                   enable: false,
@@ -425,15 +361,12 @@ export const SparklesCore = (props: SparklesProps) => {
                   enable: false,
                   speed: 1,
                   decay: 0,
+                  delay: 0,
                   sync: false,
                 },
                 enable: false,
                 opacity: 1,
                 rotation: {
-                  random: {
-                    enable: false,
-                    minimumValue: 0,
-                  },
                   value: 45,
                 },
                 width: 1,
@@ -463,10 +396,6 @@ export const SparklesCore = (props: SparklesProps) => {
                 warp: false,
               },
               repulse: {
-                random: {
-                  enable: false,
-                  minimumValue: 0,
-                },
                 value: 0,
                 enabled: false,
                 distance: 1,
