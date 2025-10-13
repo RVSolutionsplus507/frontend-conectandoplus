@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { DailyCall } from '@daily-co/daily-js';
-import { Video, VideoOff, Mic, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, X, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { dailyManager } from '@/lib/dailyManager';
 
