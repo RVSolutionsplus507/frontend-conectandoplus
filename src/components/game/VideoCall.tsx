@@ -43,10 +43,22 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
         console.log('🎥 User Name:', userName);
 
         // Wait for iframe container to be ready
+        let retries = 0;
+        while (!iframeContainerRef.current && retries < 10) {
+          console.log('⏳ Waiting for iframe container...');
+          await new Promise(resolve => setTimeout(resolve, 100));
+          retries++;
+        }
+
         if (!iframeContainerRef.current) {
-          console.error('❌ Iframe container not ready');
+          console.error('❌ Iframe container not ready after waiting');
+          setError('Error al inicializar la videollamada');
+          setIsJoining(false);
+          isInitializingRef.current = false;
           return;
         }
+
+        console.log('✅ Iframe container ready');
 
         // Get or create call object with iframe container from singleton manager
         const callObject = await dailyManager.getOrCreateCall(iframeContainerRef.current);
