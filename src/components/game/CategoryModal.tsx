@@ -27,9 +27,10 @@ export function CategoryModal({ isOpen, onClose, category }: CategoryModalProps)
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="absolute -top-2 -right-2 h-8 w-8 p-0 z-10 bg-white/90 hover:bg-white shadow-md rounded-full"
+            className="absolute -top-2 -right-2 h-8 w-8 p-0 z-10 bg-white/90 hover:bg-white shadow-md rounded-full focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label={`Cerrar información de categoría ${category.name}`}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
           
           {/* Imagen de la carta */}
@@ -44,13 +45,14 @@ export function CategoryModal({ isOpen, onClose, category }: CategoryModalProps)
             />
           </div>
           
-          {/* Botón Enterado */}
+          {/* Botón Entendido */}
           <div className="flex justify-center">
-            <Button 
+            <Button
               onClick={onClose}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2"
+              className="bg-[var(--brand-blue-500)] hover:bg-[var(--brand-blue-600)] text-white px-8 py-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label={`He entendido la categoría ${category.name}`}
             >
-              Enterado
+              Entendido
             </Button>
           </div>
         </div>

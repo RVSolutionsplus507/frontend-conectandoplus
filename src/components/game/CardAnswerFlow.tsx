@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Clock, Users, Vote, CheckCircle, ThumbsUp, ThumbsDown, Trophy, XCircle } from 'lucide-react'
 import { CardModal } from './CardModal'
 import { useSocket } from '@/hooks/useSocket'
+import { logger } from '@/lib/logger'
 
 interface GameCard {
   id: string
@@ -53,22 +54,22 @@ export function CardAnswerFlow({
 
   // Sincronizar flowState con gamePhase del backend
   useEffect(() => {
-    console.log('🔄 GamePhase changed to:', gamePhase, 'Current flowState:', flowState)
+    logger.log('🔄 GamePhase changed to:', gamePhase, 'Current flowState:', flowState)
     if (gamePhase === 'VOTING') {
-      console.log('🗳️ Setting voting phase from gamePhase prop')
+      logger.log('🗳️ Setting voting phase from gamePhase prop')
       setFlowState('waiting_approval')
       setIsModalOpen(false) // Cerrar modal cuando empiece la votación
     } else if (gamePhase === 'READING') {
-      console.log('📖 Setting reading phase from gamePhase prop')
+      logger.log('📖 Setting reading phase from gamePhase prop')
       setFlowState('reading')
       setIsModalOpen(true) // Mantener modal abierto para todos durante lectura
     } else if (gamePhase === 'PLAYING') {
-      console.log('🎮 Playing phase detected, current flowState:', flowState)
+      logger.log('🎮 Playing phase detected, current flowState:', flowState)
       // Si estamos en estado completed, dar tiempo para mostrar el resultado
       if (flowState === 'completed') {
-        console.log('⏰ Delaying reset to show voting result...')
+        logger.log('⏰ Delaying reset to show voting result...')
         setTimeout(() => {
-          console.log('🔄 Now resetting state for new turn')
+          logger.log('🔄 Now resetting state for new turn')
           setFlowState('reading')
           setIsModalOpen(true)
           setResult(null)
@@ -76,7 +77,7 @@ export function CardAnswerFlow({
           setHasVoted(false)
         }, 2000) // 2 segundos para mostrar el resultado
       } else {
-        console.log('🎮 Setting playing phase - resetting state for new turn')
+        logger.log('🎮 Setting playing phase - resetting state for new turn')
         setFlowState('reading')
         setIsModalOpen(true)
         setResult(null)
@@ -96,10 +97,10 @@ export function CardAnswerFlow({
 
   const getCategoryColor = (type: string) => {
     switch (type) {
-      case 'RC': return 'bg-yellow-100 border-yellow-300 text-yellow-800'
-      case 'AC': return 'bg-pink-100 border-pink-300 text-pink-800'
-      case 'E': return 'bg-blue-100 border-blue-300 text-blue-800'
-      case 'CE': return 'bg-green-100 border-green-300 text-green-800'
+      case 'RC': return 'bg-[var(--brand-yellow-100)] border-[var(--brand-yellow-300)] text-[var(--brand-yellow-800)]'
+      case 'AC': return 'bg-[var(--brand-pink-100)] border-[var(--brand-pink-300)] text-[var(--brand-pink-800)]'
+      case 'E': return 'bg-[var(--brand-blue-100)] border-[var(--brand-blue-300)] text-[var(--brand-blue-800)]'
+      case 'CE': return 'bg-[var(--brand-green-100)] border-[var(--brand-green-300)] text-[var(--brand-green-800)]'
       default: return 'bg-gray-100 border-gray-300 text-gray-800'
     }
   }
@@ -115,7 +116,7 @@ export function CardAnswerFlow({
   }
 
   const handleStartAnswering = () => {
-    console.log('🎯 Jugador terminó de leer, emitiendo card-read:', {
+    logger.log('🎯 Jugador terminó de leer, emitiendo card-read:', {
       playerId: currentPlayer.id,
       cardId: card.id
     })
@@ -144,9 +145,9 @@ export function CardAnswerFlow({
     if (!socket) return
 
     const handlePhaseChanged = (data: { phase: string }) => {
-      console.log('🔄 Phase changed received in frontend:', data.phase)
+      logger.log('🔄 Phase changed received in frontend:', data.phase)
       if (data.phase === 'VOTING') {
-        console.log('🗳️ Cambiando a fase de votación - cerrando modal y mostrando opciones')
+        logger.log('🗳️ Cambiando a fase de votación - cerrando modal y mostrando opciones')
         setFlowState('waiting_approval')
         setIsModalOpen(false) // Cerrar modal para todos cuando inicia votación
         setHasVoted(false) // Reset voting state for new voting round
@@ -154,7 +155,7 @@ export function CardAnswerFlow({
     }
 
     const handleVoteRegistered = (data: { playerId: string; approved: boolean; totalVotes: number; approvedVotes: number }) => {
-      console.log('🗳️ Vote registered:', data)
+      logger.log('🗳️ Vote registered:', data)
       setApprovals(prev => ({ ...prev, [data.playerId]: data.approved }))
     }
 
@@ -165,16 +166,16 @@ export function CardAnswerFlow({
       pointsEarned: number;
       message: string;
     }) => {
-      console.log('✅ Voting completed:', data)
+      logger.log('✅ Voting completed:', data)
       const resultData = {
         approved: data.approved,
         pointsEarned: data.pointsEarned,
         approvedVotes: data.approvedVotes,
         totalVotes: data.totalVotes
       }
-      console.log('📊 Setting result data:', resultData)
+      logger.log('📊 Setting result data:', resultData)
       setResult(resultData)
-      console.log('🎯 Setting flowState to completed')
+      logger.log('🎯 Setting flowState to completed')
       setFlowState('completed')
       
       // No auto-avanzar aquí, el backend ya maneja el auto-advance
@@ -229,10 +230,11 @@ export function CardAnswerFlow({
             <div className="bg-white/90 p-4 rounded-xl shadow-lg border-2 border-white/50">
               <div className="text-center">
                 <p className="text-lg font-medium text-gray-800 mb-2">{card.question}</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsModalOpen(true)}
                   className="mt-2"
+                  aria-label="Abrir vista completa de la carta"
                 >
                   Ver carta completa
                 </Button>
@@ -241,39 +243,42 @@ export function CardAnswerFlow({
 
             {/* Estado: Esperando votación */}
             {flowState === 'waiting_approval' && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4" role="region" aria-live="polite" aria-label="Votación de respuesta">
                 <div className="flex items-center gap-2 mb-3">
-                  <Vote className="h-5 w-5 text-purple-600" />
+                  <Vote className="h-5 w-5 text-purple-600" aria-hidden="true" />
                   <span className="font-semibold text-purple-800">
                     {isMyTurn ? 'Esperando votación de otros jugadores' : 'Vota la respuesta'}
                   </span>
                 </div>
-                
+
                 {isMyTurn ? (
                   <div className="text-center text-purple-700">
-                    <div className="animate-pulse mb-2">⏳</div>
+                    <div className="animate-pulse mb-2" aria-hidden="true">⏳</div>
                     <p>Los otros jugadores están votando tu respuesta...</p>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <p className="text-purple-700 mb-4">
+                    <p className="text-purple-700 mb-4" id="voting-question">
                       ¿Estás de acuerdo con la respuesta de {currentPlayer.name}?
                     </p>
-                    <div className="flex gap-3 justify-center">
-                      <Button 
+                    <div className="flex gap-3 justify-center" role="group" aria-labelledby="voting-question">
+                      <Button
                         onClick={() => handleApproval(true)}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="btn-game-continue hover:opacity-90 focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         disabled={hasVoted}
+                        aria-label={`Votar de acuerdo con la respuesta de ${currentPlayer.name}`}
                       >
-                        <ThumbsUp className="h-4 w-4 mr-2" />
+                        <ThumbsUp className="h-4 w-4 mr-2" aria-hidden="true" />
                         De acuerdo
                       </Button>
-                      <Button 
+                      <Button
                         onClick={() => handleApproval(false)}
                         variant="destructive"
                         disabled={hasVoted}
+                        className="focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        aria-label={`Votar en desacuerdo con la respuesta de ${currentPlayer.name}`}
                       >
-                        <ThumbsDown className="h-4 w-4 mr-2" />
+                        <ThumbsDown className="h-4 w-4 mr-2" aria-hidden="true" />
                         En desacuerdo
                       </Button>
                     </div>
@@ -284,40 +289,40 @@ export function CardAnswerFlow({
 
             {/* Mostrar votos en progreso */}
             {flowState === 'waiting_approval' && (
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4" role="status" aria-live="polite" aria-label="Estado de votación">
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-5 w-5 text-orange-600" />
+                  <Users className="h-5 w-5 text-orange-600" aria-hidden="true" />
                   <span className="font-semibold text-orange-800">Evaluación de respuesta</span>
                 </div>
-                
+
                 {/* Mostrar votos */}
                 <div className="mt-3">
                   <p className="text-xs text-orange-600 mb-1">
                     Votos: {Object.keys(approvals).length} de {otherPlayers.length}
                   </p>
-                  <div className="flex gap-2 flex-wrap">
+                  <ul className="flex gap-2 flex-wrap" aria-label="Votos de jugadores">
                     {otherPlayers.map(player => (
-                      <div key={player.id} className="flex items-center gap-1 bg-white/50 px-2 py-1 rounded">
+                      <li key={player.id} className="flex items-center gap-1 bg-white/50 px-2 py-1 rounded">
                         <span className="text-xs">{player.name}</span>
                         {player.id in approvals ? (
                           approvals[player.id] ? (
-                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            <CheckCircle className="h-3 w-3 text-green-600" aria-label="votó a favor" />
                           ) : (
-                            <XCircle className="h-3 w-3 text-red-600" />
+                            <XCircle className="h-3 w-3 text-red-600" aria-label="votó en contra" />
                           )
                         ) : (
-                          <Clock className="h-3 w-3 text-gray-400" />
+                          <Clock className="h-3 w-3 text-gray-400" aria-label="esperando voto" />
                         )}
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               </div>
             )}
 
             {/* Estado: Completado */}
             {(() => {
-              console.log('🎯 Rendering completed state check:', { flowState, result, hasResult: !!result })
+              logger.log('🎯 Rendering completed state check:', { flowState, result, hasResult: !!result })
               return flowState === 'completed' && result && (
                 <div className={`${result.approved ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border rounded-lg p-4 text-center`}>
                   {result.approved ? (

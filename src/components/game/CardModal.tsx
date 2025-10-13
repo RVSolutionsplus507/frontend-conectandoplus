@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { X } from 'lucide-react'
@@ -46,19 +47,49 @@ export function CardModal({
     onClose()
   }
 
+  // Manejar tecla ESC
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      // Prevenir scroll del body cuando el modal está abierto
+      document.body.style.overflow = 'hidden'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto relative">
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="card-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Botón cerrar */}
         <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 h-8 w-8 p-0 bg-white/80 hover:bg-white"
+          className="absolute top-4 right-4 z-10 h-8 w-8 p-0 bg-white/80 hover:bg-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          aria-label="Cerrar modal de carta"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Button>
 
         {/* Contenido de la Carta - Enfocado en legibilidad */}
@@ -66,10 +97,10 @@ export function CardModal({
           {/* Header con badges - Solo badges */}
           <div className="flex justify-center mb-4">
             <div className="flex gap-2">
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs" id="card-modal-title">
                 {card.type}
               </Badge>
-              <Badge variant="secondary">{card.points} puntos</Badge>
+              <Badge variant="secondary" aria-label={`Esta carta vale ${card.points} puntos`}>{card.points} puntos</Badge>
             </div>
           </div>
 

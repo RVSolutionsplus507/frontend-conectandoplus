@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from '@/lib/schemas'
 import { toast } from 'sonner'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Gamepad2 } from 'lucide-react'
+import Image from 'next/image'
 
 export function LoginForm() {
   const { login, register, isLoading, error } = useAuth()
@@ -74,17 +75,29 @@ export function LoginForm() {
 
 
   return (
-    <div 
-      className="flex items-end justify-center min-h-screen bg-cover bg-center bg-no-repeat pb-36"
+    <div
+      className="flex items-end justify-center min-h-screen bg-cover bg-center bg-no-repeat pb-36 bg-[var(--brand-blue-50)]"
       style={{
-        backgroundImage: "url('/logo/fondo2.png')"
+        backgroundImage: "url('/logo/fondo2.png')",
+        backgroundBlendMode: 'overlay'
       }}
     >
       <Card className="w-full max-w-md backdrop-blur-sm bg-background/95 shadow-2xl border-2">
-        <CardHeader className="text-center">
-          <CardDescription>
-            Juego educativo de resolución de conflictos y autoconocimiento
-          </CardDescription>
+        <CardHeader className="text-center space-y-4 pb-6">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--brand-blue-500)] to-[var(--brand-green-500)] flex items-center justify-center shadow-lg">
+              <Gamepad2 className="w-10 h-10 text-white" aria-hidden="true" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-[var(--brand-blue-800)] mb-2">Conectando+</h1>
+            <CardDescription className="text-base">
+              Juego educativo de resolución de conflictos y autoconocimiento
+            </CardDescription>
+            <p className="text-sm text-muted-foreground mt-2">
+              Inicia sesión para comenzar tu aventura de aprendizaje
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
@@ -100,12 +113,16 @@ export function LoginForm() {
                   <Input
                     id="login-email"
                     type="email"
+                    autoComplete="email"
                     value={loginData.email}
                     onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
                     required
+                    aria-required="true"
+                    aria-invalid={!!loginErrors.email}
+                    aria-describedby={loginErrors.email ? "login-email-error" : undefined}
                   />
                   {loginErrors.email && (
-                    <div className="text-sm text-destructive">{loginErrors.email}</div>
+                    <div id="login-email-error" className="text-sm text-destructive" role="alert">{loginErrors.email}</div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -114,10 +131,14 @@ export function LoginForm() {
                     <Input
                       id="login-password"
                       type={showLoginPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       value={loginData.password}
                       onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                       required
                       className="pr-10"
+                      aria-required="true"
+                      aria-invalid={!!loginErrors.password}
+                      aria-describedby={loginErrors.password ? "login-password-error" : undefined}
                     />
                     <Button
                       type="button"
@@ -125,16 +146,17 @@ export function LoginForm() {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       {showLoginPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       )}
                     </Button>
                   </div>
                   {loginErrors.password && (
-                    <div className="text-sm text-destructive">{loginErrors.password}</div>
+                    <div id="login-password-error" className="text-sm text-destructive" role="alert">{loginErrors.password}</div>
                   )}
                 </div>
                 {error && (
@@ -153,12 +175,16 @@ export function LoginForm() {
                   <Input
                     id="register-name"
                     type="text"
+                    autoComplete="name"
                     value={registerData.name}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
                     required
+                    aria-required="true"
+                    aria-invalid={!!registerErrors.name}
+                    aria-describedby={registerErrors.name ? "register-name-error" : undefined}
                   />
                   {registerErrors.name && (
-                    <div className="text-sm text-destructive">{registerErrors.name}</div>
+                    <div id="register-name-error" className="text-sm text-destructive" role="alert">{registerErrors.name}</div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -166,12 +192,16 @@ export function LoginForm() {
                   <Input
                     id="register-email"
                     type="email"
+                    autoComplete="email"
                     value={registerData.email}
                     onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
                     required
+                    aria-required="true"
+                    aria-invalid={!!registerErrors.email}
+                    aria-describedby={registerErrors.email ? "register-email-error" : undefined}
                   />
                   {registerErrors.email && (
-                    <div className="text-sm text-destructive">{registerErrors.email}</div>
+                    <div id="register-email-error" className="text-sm text-destructive" role="alert">{registerErrors.email}</div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -180,10 +210,14 @@ export function LoginForm() {
                     <Input
                       id="register-password"
                       type={showRegisterPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       value={registerData.password}
                       onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                       required
                       className="pr-10"
+                      aria-required="true"
+                      aria-invalid={!!registerErrors.password}
+                      aria-describedby={registerErrors.password ? "register-password-error" : undefined}
                     />
                     <Button
                       type="button"
@@ -191,16 +225,17 @@ export function LoginForm() {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      aria-label={showRegisterPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       {showRegisterPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       )}
                     </Button>
                   </div>
                   {registerErrors.password && (
-                    <div className="text-sm text-destructive">{registerErrors.password}</div>
+                    <div id="register-password-error" className="text-sm text-destructive" role="alert">{registerErrors.password}</div>
                   )}
                 </div>
                 {error && (

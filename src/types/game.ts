@@ -65,7 +65,15 @@ export interface GameRoom {
   status: 'waiting' | 'playing' | 'finished'
   targetScore?: number
   allowedCategories?: CardCategory[]
+  dailyRoomName?: string | null
+  dailyRoomUrl?: string | null
   createdAt: Date
+  gameState?: {
+    phase: GamePhase
+    currentPlayerId?: string
+    currentCard?: Card | null
+    scores?: Record<string, number>
+  }
 }
 
 export interface DebateInfo {

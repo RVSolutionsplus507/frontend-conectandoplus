@@ -3,13 +3,14 @@ import { API_BASE_URL } from './constants'
 import { Player } from '@/types/player'
 import { Card } from '@/types/card'
 import { User, Game, GlobalStats, CreateGameData, CreateUserData } from '@/types/admin'
+import { logger } from '@/lib/logger'
 
 interface AuthResponse {
   user: Player
   token: string
 }
 
-interface PlayerResponse {
+export interface PlayerResponse {
   id: string
   name: string
   score: number
@@ -18,7 +19,7 @@ interface PlayerResponse {
   hasReadExplanations: boolean
 }
 
-interface GameResponse {
+export interface GameResponse {
   id: string
   roomCode: string
   status: 'WAITING' | 'IN_PROGRESS' | 'FINISHED'
@@ -26,6 +27,8 @@ interface GameResponse {
   currentTurn: number
   targetScore: number | null
   isFinished?: boolean
+  dailyRoomName?: string | null
+  dailyRoomUrl?: string | null
   winner?: {
     id: string
     name: string
@@ -49,11 +52,11 @@ class ApiClient {
     this.client.interceptors.request.use((config) => {
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token')
-        console.log('🔑 Token desde localStorage:', token ? 'Existe' : 'No existe')
+        logger.log('🔑 Token desde localStorage:', token ? 'Existe' : 'No existe')
         if (token) {
           config.headers = config.headers || {}
           config.headers.Authorization = `Bearer ${token}`
-          console.log('📤 Enviando token en header Authorization')
+          logger.log('📤 Enviando token en header Authorization')
         }
       }
       return config
@@ -75,7 +78,7 @@ class ApiClient {
       
       return response.data as T
     } catch (error) {
-      console.error('API request failed:', error)
+      logger.error('API request failed:', error)
       throw error
     }
   }

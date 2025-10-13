@@ -15,7 +15,9 @@ import { AnswerTimer } from './AnswerTimer'
 import { PlayerActionButtons } from './PlayerActionButtons'
 import { ModeratorPanel } from './ModeratorPanel'
 import { DebatePanel } from './DebatePanel'
+import { VideoCall } from './VideoCall'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
 
 interface GameRoomProps {
   roomCode: string
@@ -57,28 +59,28 @@ export function GameRoom({ roomCode }: GameRoomProps) {
       code: 'RC',
       name: 'Resolución de Conflictos',
       description: 'Situaciones de conflicto con opciones múltiples y estrategias de resolución',
-      color: 'bg-yellow-500',
+      color: 'bg-category-rc',
       image: '/categories/RC.png'
     },
     AC: {
       code: 'AC',
-      name: 'Autoconocimiento', 
+      name: 'Autoconocimiento',
       description: 'Preguntas de reflexión personal y completar frases de autoconocimiento',
-      color: 'bg-pink-500',
+      color: 'bg-category-ac',
       image: '/categories/AC.png'
     },
     E: {
       code: 'E',
       name: 'Empatía',
       description: 'Desarrollo de empatía y comprensión del otro, perspectivas diferentes',
-      color: 'bg-blue-500',
+      color: 'bg-category-e',
       image: '/categories/E.png'
     },
     CE: {
       code: 'CE',
       name: 'Comunicación Efectiva',
       description: 'Habilidades de comunicación y alternativas creativas',
-      color: 'bg-green-500',
+      color: 'bg-category-ce',
       image: '/categories/CE.png'
     }
   }
@@ -109,7 +111,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   useEffect(() => {
     const handleAnswerTimeout = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string; message: string }
-      console.log('⏰ Timeout recibido del servidor:', data)
+      logger.log('⏰ Timeout recibido del servidor:', data)
       setTimeoutPlayerName(data.playerName)
       setShowTimeoutModal(true)
       setIsTimerActive(false)
@@ -122,7 +124,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
 
     // Escuchar cuando se marca la carta como leída (para iniciar timer)
     const handleCardRead = () => {
-      console.log('📖 Carta marcada como leída - iniciando timer')
+      logger.log('📖 Carta marcada como leída - iniciando timer')
       setIsTimerActive(true)
     }
 
@@ -138,10 +140,10 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   // Unirse a la sala al cargar (solo una vez)
   useEffect(() => {
     if (user?.id && roomCode && !hasJoined) {
-      console.log('🎮 Attempting to join room:', roomCode)
+      logger.log('🎮 Attempting to join room:', roomCode)
       // Pequeño delay para asegurar que el socket esté conectado
       const timer = setTimeout(() => {
-        console.log('🎮 Joining room after delay:', roomCode)
+        logger.log('🎮 Joining room after delay:', roomCode)
         joinRoom(user.id, user.name || 'Jugador', roomCode)
         setHasJoined(true)
       }, 1000)
@@ -153,19 +155,19 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   // Efecto para sacar carta automáticamente cuando es mi turno
   const drawRandomCard = useCallback(() => {
     if (user?.id && gameRoom) {
-      console.log('🎲 Drawing random card...')
+      logger.log('🎲 Drawing random card...')
       // Usar solo las categorías permitidas en esta partida
       const allowedCategories = gameRoom.gameState.settings?.allowedCategories || ['RC', 'AC', 'E', 'CE']
       const randomType = allowedCategories[Math.floor(Math.random() * allowedCategories.length)] as 'RC' | 'AC' | 'E' | 'CE'
-      console.log(`🎲 Categorías permitidas: ${allowedCategories.join(', ')}`)
-      console.log(`🎲 Categoría seleccionada: ${randomType}`)
+      logger.log(`🎲 Categorías permitidas: ${allowedCategories.join(', ')}`)
+      logger.log(`🎲 Categoría seleccionada: ${randomType}`)
       drawCard(roomCode, user.id, randomType)
     }
   }, [roomCode, user?.id, drawCard, gameRoom])
 
   useEffect(() => {
     if (isMyTurn(user?.id || '') && !currentCard && isGameInProgress() && gameRoom?.currentPhase !== 'FINISHED') {
-      console.log('🎯 Auto-drawing card: isMyTurn=true, currentCard=null, gameInProgress=true')
+      logger.log('🎯 Auto-drawing card: isMyTurn=true, currentCard=null, gameInProgress=true')
       // Agregar un pequeño delay para evitar llamadas duplicadas
       const timer = setTimeout(() => {
         drawRandomCard()
@@ -178,7 +180,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   // Escuchar cuando se saca una carta
   useEffect(() => {
     if (gameRoom?.gameState.currentCard) {
-      console.log('🃏 Card received:', gameRoom.gameState.currentCard)
+      logger.log('🃏 Card received:', gameRoom.gameState.currentCard)
       setCurrentCard(gameRoom.gameState.currentCard)
       // NO activar timer aquí - se activará cuando se dé click en "Leído"
     } else {
@@ -202,9 +204,10 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   if (!gameRoom) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div className="text-center" role="status" aria-live="polite">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" aria-hidden="true"></div>
           <p className="text-gray-600">Conectando a la sala...</p>
+          <span className="sr-only">Cargando sala de juego, por favor espera</span>
         </div>
       </div>
     )
@@ -229,7 +232,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
 
   const onNextTurn = () => {
     if (user?.id) {
-      console.log('🔄 Clearing current card before next turn')
+      logger.log('🔄 Clearing current card before next turn')
       setCurrentCard(null) // Limpiar carta antes de cambiar turno
       nextTurn(roomCode, user.id)
     }
@@ -239,39 +242,49 @@ export function GameRoom({ roomCode }: GameRoomProps) {
   const canStartGame = isHost && gameRoom?.currentPhase === 'WAITING' && playersArray.length >= 2
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--brand-blue-50)] to-[var(--brand-pink-100)]">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-8" role="banner">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Conectando+</h1>
-            <p className="text-gray-600">Sala: {roomCode}</p>
+            <p className="text-gray-600" aria-live="polite">Sala: {roomCode}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-4" aria-label="Controles de partida">
             {canStartGame && (
-              <Button onClick={handleStartGame} size="lg" className="bg-green-600 hover:bg-green-700">
-                <Trophy className="h-4 w-4 mr-2" />
+              <Button
+                onClick={handleStartGame}
+                size="lg"
+                className="btn-game-continue focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                aria-label={`Iniciar juego con ${playersArray.length} jugadores presentes`}
+              >
+                <Trophy className="h-4 w-4 mr-2" aria-hidden="true" />
                 Iniciar Juego
               </Button>
             )}
-            <Button variant="outline" onClick={() => router.push('/')}>
-              <Home className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              onClick={() => router.push('/')}
+              aria-label="Salir de la sala y volver al inicio"
+              className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <Home className="h-4 w-4 mr-2" aria-hidden="true" />
               Salir
             </Button>
-          </div>
-        </div>
+          </nav>
+        </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Área Principal del Juego */}
-          <div className="lg:col-span-2 space-y-6">
+          <main className="lg:col-span-2 space-y-6" role="main" aria-label="Área de juego principal">
             {isGameInProgress() ? (
               <div className="space-y-6">
                 {/* Información del Turno */}
                 <Card>
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between" role="status" aria-live="polite" aria-atomic="true">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-12 w-12" aria-hidden="true">
                           <AvatarFallback className="bg-blue-600 text-white">
                             {currentPlayer?.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
@@ -286,8 +299,8 @@ export function GameRoom({ roomCode }: GameRoomProps) {
                         </div>
                       </div>
                       {isMyTurnValue && (
-                        <Badge className="bg-green-600">
-                          <Clock className="h-3 w-3 mr-1" />
+                        <Badge className="bg-green-600" aria-label="Es tu turno de jugar">
+                          <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
                           Tu turno
                         </Badge>
                       )}
@@ -297,16 +310,16 @@ export function GameRoom({ roomCode }: GameRoomProps) {
 
                 {/* Área de Carta */}
                 {!currentCard && (
-                  <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                  <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50" role="status" aria-live="polite">
                     {isMyTurnValue ? (
                       <div className="space-y-4">
-                        <div className="text-6xl text-gray-400">🎲</div>
+                        <div className="text-6xl text-gray-400" aria-hidden="true">🎲</div>
                         <p className="text-lg font-medium">Sacando carta automáticamente...</p>
-                        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto" aria-label="Cargando carta"></div>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="text-4xl text-gray-400">⏳</div>
+                        <div className="text-4xl text-gray-400" aria-hidden="true">⏳</div>
                         <p className="text-gray-600">Esperando a {currentPlayer?.name}</p>
                       </div>
                     )}
@@ -326,12 +339,14 @@ export function GameRoom({ roomCode }: GameRoomProps) {
                   />
                 )}
 
-                {/* Debug Info */}
-                <div className="bg-gray-100 p-2 rounded text-xs">
-                  <p>Debug: currentCard={currentCard ? 'SÍ' : 'NO'}, isMyTurn={isMyTurnValue ? 'SÍ' : 'NO'}, gamePhase={gameRoom.gameState.phase}</p>
-                  <p>Jugador actual: {currentPlayer?.name} (ID: {currentPlayer?.id})</p>
-                  <p>Usuario: {currentUser.name} (ID: {currentUser.id})</p>
-                </div>
+                {/* Debug Info - Solo en desarrollo */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="bg-gray-100 p-2 rounded text-xs">
+                    <p>Debug: currentCard={currentCard ? 'SÍ' : 'NO'}, isMyTurn={isMyTurnValue ? 'SÍ' : 'NO'}, gamePhase={gameRoom.gameState.phase}</p>
+                    <p>Jugador actual: {currentPlayer?.name} (ID: {currentPlayer?.id})</p>
+                    <p>Usuario: {currentUser.name} (ID: {currentUser.id})</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">
@@ -349,30 +364,34 @@ export function GameRoom({ roomCode }: GameRoomProps) {
                 {/* Botones de Categorías */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-center mb-4">Conoce las Categorías de Cartas</h3>
-                  <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+                  <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto" role="group" aria-label="Categorías de cartas del juego">
                     <Button
                       onClick={() => openCategoryModal('RC')}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      className="bg-category-rc text-[var(--category-rc-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      aria-label="Ver información de categoría Resolución de Conflictos"
                     >
-                      📋 Resolución de Conflictos
+                      <span aria-hidden="true">📋 </span>Resolución de Conflictos
                     </Button>
                     <Button
                       onClick={() => openCategoryModal('AC')}
-                      className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      className="bg-category-ac text-[var(--category-ac-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      aria-label="Ver información de categoría Autoconocimiento"
                     >
-                      🧠 Autoconocimiento
+                      <span aria-hidden="true">🧠 </span>Autoconocimiento
                     </Button>
                     <Button
                       onClick={() => openCategoryModal('E')}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      className="bg-category-e text-[var(--category-e-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      aria-label="Ver información de categoría Empatía"
                     >
-                      💝 Empatía
+                      <span aria-hidden="true">💝 </span>Empatía
                     </Button>
                     <Button
                       onClick={() => openCategoryModal('CE')}
-                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      className="bg-category-ce text-[var(--category-ce-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                      aria-label="Ver información de categoría Comunicación Efectiva"
                     >
-                      💬 Comunicación Efectiva
+                      <span aria-hidden="true">💬 </span>Comunicación Efectiva
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500 text-center mt-4">
@@ -381,49 +400,75 @@ export function GameRoom({ roomCode }: GameRoomProps) {
                 </div>
               </div>
             )}
-          </div>
+          </main>
 
-          {/* Lista de Jugadores */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Jugadores
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {playersArray.map((player) => (
-                  <div
-                    key={player.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      player.id === currentPlayer?.id
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className={player.id === currentPlayer?.id ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}>
-                          {player.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{player.name}</p>
-                        {player.id === currentPlayer?.id && (
-                          <p className="text-sm text-blue-600">Turno actual</p>
-                        )}
+          {/* Lista de Jugadores y Video Call */}
+          <aside aria-label="Lista de jugadores y puntuaciones" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" aria-hidden="true" />
+                  Jugadores
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2" aria-label="Jugadores y sus puntuaciones">
+                  {playersArray.map((player) => (
+                    <li
+                      key={player.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        player.id === currentPlayer?.id
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                      aria-current={player.id === currentPlayer?.id ? 'true' : 'false'}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8" aria-hidden="true">
+                          <AvatarFallback className={player.id === currentPlayer?.id ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}>
+                            {player.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{player.name}</p>
+                          {player.id === currentPlayer?.id && (
+                            <p className="text-sm text-blue-600">Turno actual</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{player.score}</p>
-                      <p className="text-sm text-gray-500">puntos</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                      <div className="text-right" aria-label={`${player.score} puntos`}>
+                        <p className="font-bold text-lg">{player.score}</p>
+                        <p className="text-sm text-gray-500" aria-hidden="true">puntos</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Video Call */}
+            {gameRoom?.dailyRoomUrl ? (
+              <VideoCall
+                roomUrl={gameRoom.dailyRoomUrl}
+                userName={user?.name || 'Jugador'}
+                onLeave={() => {
+                  logger.log('📹 Usuario salió de la videollamada')
+                }}
+              />
+            ) : (
+              <Card className="bg-purple-50 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    📹 Videollamada
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600">
+                  <p>Esta sala no tiene videollamada configurada.</p>
+                  <p className="text-xs mt-2">Crea una nueva sala desde el panel de administrador para activar el video.</p>
+                </CardContent>
+              </Card>
+            )}
+          </aside>
         </div>
       </div>
 
@@ -454,7 +499,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
         initialTime={60}
         isActive={isTimerActive && isMyTurnValue}
         onTimeout={() => {
-          console.log('⏰ Timer expirado en frontend')
+          logger.log('⏰ Timer expirado en frontend')
           setIsTimerActive(false)
         }}
       />
@@ -466,14 +511,14 @@ export function GameRoom({ roomCode }: GameRoomProps) {
           hasCard={!!currentCard}
           onAnswered={() => {
             if (user?.id && currentCard?.id) {
-              console.log('✅ Jugador marcó que ya respondió')
+              logger.log('✅ Jugador marcó que ya respondió')
               playerAnswered(user.id, currentCard.id)
               setIsTimerActive(false)
             }
           }}
           onSkipTurn={() => {
             if (user?.id) {
-              console.log('⏭️ Jugador pasó su turno')
+              logger.log('⏭️ Jugador pasó su turno')
               skipTurn(roomCode, user.id)
               setIsTimerActive(false)
               setCurrentCard(null)
@@ -492,7 +537,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
         const currentPlayer = playersArray.find(p => p.id === user?.id)
         const isModerator = currentPlayer?.role === 'MODERATOR' || currentPlayer?.role === 'PLAYER_MODERATOR'
         
-        console.log('🔍 DEBUG Debate Panel:', {
+        logger.log('🔍 DEBUG Debate Panel:', {
           userId: user?.id,
           currentPlayer,
           playerRole: currentPlayer?.role,
@@ -517,7 +562,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
             isModerator={isModerator}
             onResolve={(approved) => {
               if (user?.id) {
-                console.log(`⚖️ Moderador resolvió debate: ${approved ? 'Aprobado' : 'Rechazado'}`)
+                logger.log(`⚖️ Moderador resolvió debate: ${approved ? 'Aprobado' : 'Rechazado'}`)
                 resolveDebate(roomCode, user.id, approved)
               }
             }}
@@ -541,7 +586,7 @@ export function GameRoom({ roomCode }: GameRoomProps) {
             }))}
             onEndGame={() => {
               if (user?.id) {
-                console.log('🏁 Moderador finalizó el juego')
+                logger.log('🏁 Moderador finalizó el juego')
                 endGameModerator(roomCode, user.id)
               }
             }}
@@ -553,16 +598,23 @@ export function GameRoom({ roomCode }: GameRoomProps) {
 
       {/* Modal de Timeout */}
       {showTimeoutModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-live="assertive"
+          aria-labelledby="timeout-title"
+          aria-describedby="timeout-description"
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in fade-in zoom-in duration-200">
             <div className="text-center">
               <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-10 h-10 text-orange-600" />
+                <Clock className="w-10 h-10 text-orange-600" aria-hidden="true" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                ⏰ Tiempo Agotado
+              <h3 id="timeout-title" className="text-2xl font-bold text-gray-900 mb-2">
+                <span aria-hidden="true">⏰ </span>Tiempo Agotado
               </h3>
-              <p className="text-gray-600 text-lg">
+              <p id="timeout-description" className="text-gray-600 text-lg">
                 {timeoutPlayerName} no respondió a tiempo
               </p>
               <p className="text-sm text-gray-500 mt-2">

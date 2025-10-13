@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSocket } from './useSocket'
 import { toast } from 'sonner'
+import { logger } from '@/lib/logger'
 
 // Tipos para el juego
 interface Player {
@@ -55,6 +56,8 @@ interface GameRoom {
   currentTurn: number
   winner?: Player
   finalScores?: Player[]
+  dailyRoomName?: string | null
+  dailyRoomUrl?: string | null
 }
 
 export function useGameSocket() {
@@ -64,23 +67,23 @@ export function useGameSocket() {
 
   // Funciones del juego
   const joinRoom = useCallback((playerId: string, playerName: string, roomCode: string) => {
-    console.log(`🔌 joinRoom called: socket=${!!socket}, isConnected=${isConnected}`)
+    logger.log(`🔌 joinRoom called: socket=${!!socket}, isConnected=${isConnected}`)
     if (!socket) {
-      console.error('❌ No socket available')
+      logger.error('❌ No socket available')
       setError('No hay conexión con el servidor')
       return
     }
-    console.log(`📤 Emitting join-room: roomCode=${roomCode}, playerId=${playerId}, playerName=${playerName}`)
+    logger.log(`📤 Emitting join-room: roomCode=${roomCode}, playerId=${playerId}, playerName=${playerName}`)
     emit('join-room', { roomCode, playerId, playerName })
   }, [socket, isConnected, emit])
 
   const startGame = useCallback((roomCode: string, playerId: string) => {
-    console.log(`🎮 Frontend enviando start-game: roomCode=${roomCode}, playerId=${playerId}`)
+    logger.log(`🎮 Frontend enviando start-game: roomCode=${roomCode}, playerId=${playerId}`)
     emit('start-game', { roomCode, playerId })
   }, [emit])
 
   const drawCard = useCallback((roomCode: string, playerId: string, cardType: 'RC' | 'AC' | 'E' | 'CE') => {
-    console.log(`🃏 Frontend enviando draw-card: roomCode=${roomCode}, playerId=${playerId}, cardType=${cardType}`)
+    logger.log(`🃏 Frontend enviando draw-card: roomCode=${roomCode}, playerId=${playerId}, cardType=${cardType}`)
     emit('draw-card', { roomCode, playerId, cardType })
   }, [emit])
 
@@ -93,9 +96,9 @@ export function useGameSocket() {
   }, [emit])
 
   const approveAnswer = useCallback((playerId: string, approved: boolean) => {
-    console.log('🗳️ Enviando voto:', { playerId, approved })
+    logger.log('🗳️ Enviando voto:', { playerId, approved })
     if (!socket?.connected) {
-      console.error('❌ Socket no conectado, no se puede enviar voto')
+      logger.error('❌ Socket no conectado, no se puede enviar voto')
       return
     }
     emit('approve-answer', { playerId, approved })
@@ -125,7 +128,7 @@ export function useGameSocket() {
   const isMyTurn = useCallback((playerId: string) => {
     const currentPlayerId = gameRoom?.gameState.currentPlayerId
     const result = currentPlayerId === playerId
-    console.log(`🎯 isMyTurn check: playerId=${playerId}, currentPlayerId=${currentPlayerId}, result=${result}`)
+    logger.log(`🎯 isMyTurn check: playerId=${playerId}, currentPlayerId=${currentPlayerId}, result=${result}`)
     return result
   }, [gameRoom])
 
@@ -146,22 +149,32 @@ export function useGameSocket() {
     if (!socket || !isConnected) return
 
     const handlePlayerJoined = (...args: unknown[]) => {
-      const data = args[0] as { player: Player; players: Player[]; gameState: GameState; roomCode: string }
-      console.log('🎮 Jugador se unió:', data.player.name)
+      const data = args[0] as {
+        player: Player;
+        players: Player[];
+        gameState: GameState;
+        roomCode: string;
+        dailyRoomUrl?: string | null;
+        dailyRoomName?: string | null;
+      }
+      logger.log('🎮 Jugador se unió:', data.player.name)
+      logger.log('📹 Daily.co URL recibida:', data.dailyRoomUrl)
       setGameRoom({
         roomCode: data.roomCode,
         players: data.players,
         gameState: data.gameState,
         currentPhase: 'WAITING',
-        currentTurn: 0
+        currentTurn: 0,
+        dailyRoomUrl: data.dailyRoomUrl || null,
+        dailyRoomName: data.dailyRoomName || null
       })
       setError(null)
     }
 
     const handleGameStarted = (...args: unknown[]) => {
       const data = args[0] as { gameState: GameState; message: string }
-      console.log('🎮 Juego iniciado. Jugador actual:', data.gameState.currentPlayerId)
-      console.log('🎮 Data completa recibida:', JSON.stringify(data, null, 2))
+      logger.log('🎮 Juego iniciado. Jugador actual:', data.gameState.currentPlayerId)
+      logger.log('🎮 Data completa recibida:', JSON.stringify(data, null, 2))
       
       setGameRoom(prev => prev ? {
         ...prev,
@@ -173,11 +186,11 @@ export function useGameSocket() {
         currentPhase: 'IN_PROGRESS',
         currentTurn: prev.currentTurn + 1
       } : null)
-      console.log('🎮 Estado actualizado. CurrentPlayerId:', data.gameState.currentPlayerId)
+      logger.log('🎮 Estado actualizado. CurrentPlayerId:', data.gameState.currentPlayerId)
     }
 
     const handleExplanationStarted = () => {
-      console.log('📚 Fase de explicaciones iniciada')
+      logger.log('📚 Fase de explicaciones iniciada')
       setGameRoom(prev => prev ? {
         ...prev,
         currentPhase: 'EXPLANATION'
@@ -186,7 +199,7 @@ export function useGameSocket() {
 
     const handleCardDrawn = (...args: unknown[]) => {
       const data = args[0] as { card: Card; playerId: string; playerName: string }
-      console.log('🏏 Carta sacada:', data.card.type, 'por', data.playerName)
+      logger.log('🏏 Carta sacada:', data.card.type, 'por', data.playerName)
       
       setGameRoom(prev => prev ? {
         ...prev,
@@ -199,12 +212,12 @@ export function useGameSocket() {
 
     const handleAnswerSubmitted = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; answer: string; isCorrect: boolean; points: number }
-      console.log('📝 Respuesta enviada:', data.answer)
+      logger.log('📝 Respuesta enviada:', data.answer)
     }
 
     const handleAnswerApproved = (...args: unknown[]) => {
       const data = args[0] as { voterId: string; voterName: string; approved: boolean }
-      console.log('👍 Voto recibido:', data.voterName, data.approved ? 'aprobó' : 'rechazó')
+      logger.log('👍 Voto recibido:', data.voterName, data.approved ? 'aprobó' : 'rechazó')
     }
 
     const handleVotingCompleted = (...args: unknown[]) => {
@@ -218,7 +231,7 @@ export function useGameSocket() {
         newScore: number;
         message: string;
       }
-      console.log('🏆 Votación completada:', data.playerName, data.approved ? `ganó ${data.pointsEarned} puntos` : 'no ganó puntos')
+      logger.log('🏆 Votación completada:', data.playerName, data.approved ? `ganó ${data.pointsEarned} puntos` : 'no ganó puntos')
       
       // Mostrar notificación del resultado
       if (data.approved) {
@@ -260,7 +273,7 @@ export function useGameSocket() {
         totalVotes: number;
         newScore: number;
       }
-      console.log('🏆 Resultado:', data.playerName, data.approved ? `ganó ${data.pointsEarned} puntos` : 'no ganó puntos')
+      logger.log('🏆 Resultado:', data.playerName, data.approved ? `ganó ${data.pointsEarned} puntos` : 'no ganó puntos')
       
       // Actualizar puntuación del jugador en el estado local
       setGameRoom(prev => {
@@ -281,7 +294,7 @@ export function useGameSocket() {
         currentPlayerId?: string;
         message?: string;
       }
-      console.log('🔄 Fase cambiada a:', data.phase, data.message || '')
+      logger.log('🔄 Fase cambiada a:', data.phase, data.message || '')
       
       setGameRoom(prev => {
         if (!prev) return null
@@ -308,7 +321,7 @@ export function useGameSocket() {
 
     const handleTurnChanged = (...args: unknown[]) => {
       const data = args[0] as { currentPlayerId: string; currentTurn: number; phase?: string }
-      console.log('🔄 Turno cambiado a:', data.currentPlayerId)
+      logger.log('🔄 Turno cambiado a:', data.currentPlayerId)
       
       setGameRoom(prev => {
         if (!prev) return null
@@ -340,9 +353,9 @@ export function useGameSocket() {
 
     const handleGameFinished = (...args: unknown[]) => {
       const data = args[0] as { winner: Player; finalScores: Player[] }
-      console.log('🏆 Juego terminado. Ganador:', data.winner.name)
-      console.log('🎯 Final scores:', data.finalScores)
-      console.log('🎮 Actualizando gameRoom con fase FINISHED')
+      logger.log('🏆 Juego terminado. Ganador:', data.winner.name)
+      logger.log('🎯 Final scores:', data.finalScores)
+      logger.log('🎮 Actualizando gameRoom con fase FINISHED')
       
       setGameRoom(prev => {
         if (!prev) return null
@@ -358,14 +371,14 @@ export function useGameSocket() {
           }
         }
         
-        console.log('🎮 GameRoom actualizado:', updated)
+        logger.log('🎮 GameRoom actualizado:', updated)
         return updated
       })
     }
 
     const handleRedirectToDashboard = (...args: unknown[]) => {
       const data = args[0] as { message: string; delay: number }
-      console.log('🔄 Evento redirect-to-dashboard recibido (IGNORADO):', data.message)
+      logger.log('🔄 Evento redirect-to-dashboard recibido (IGNORADO):', data.message)
       
       // NO redirigir automáticamente - el modal se encarga de esto
       toast.info('Juego terminado. Usa el botón del modal para salir.', {
@@ -375,16 +388,16 @@ export function useGameSocket() {
 
     const handlePlayerLeft = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string }
-      console.log('👋 Jugador salió:', data.playerName)
+      logger.log('👋 Jugador salió:', data.playerName)
     }
 
     const handlePlayerReconnected = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string }
-      console.log('🔄 Jugador reconectado:', data.playerName)
+      logger.log('🔄 Jugador reconectado:', data.playerName)
     }
     const handleGameError = (...args: unknown[]) => {
       const data = args[0] as { message: string }
-      console.error('Error del servidor:', data.message)
+      logger.error('Error del servidor:', data.message)
       setError(data.message)
       toast.error(data.message, { duration: 4000 })
       if (data.message.includes('ya terminó') || data.message.includes('no existe')) {
@@ -396,19 +409,19 @@ export function useGameSocket() {
 
     const handleAnswerTimerStarted = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string; timeLimit: number }
-      console.log(`⏱️ Timer iniciado para ${data.playerName}: ${data.timeLimit}s`)
+      logger.log(`⏱️ Timer iniciado para ${data.playerName}: ${data.timeLimit}s`)
       toast.info(`⏱️ ${data.playerName} tiene ${data.timeLimit} segundos para responder`)
     }
 
     const handleAnswerTimeout = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string; message: string }
-      console.log(`⏰ Tiempo agotado para ${data.playerName}`)
+      logger.log(`⏰ Tiempo agotado para ${data.playerName}`)
       toast.warning(`⏰ ${data.message} - ${data.playerName}`)
     }
 
     const handleTurnSkipped = (...args: unknown[]) => {
       const data = args[0] as { playerId: string; playerName: string; nextPlayerId: string; nextPlayerName: string }
-      console.log(`⏭️ ${data.playerName} pasó su turno`)
+      logger.log(`⏭️ ${data.playerName} pasó su turno`)
       toast.info(`⏭️ ${data.playerName} pasó su turno. Turno de ${data.nextPlayerName}`)
     }
 
@@ -422,7 +435,7 @@ export function useGameSocket() {
         votes: Array<{ playerId: string; playerName?: string; vote: 'agree' | 'disagree' }>
         message: string
       }
-      console.log(`🗣️ Debate iniciado para respuesta de ${data.playerName}`, data)
+      logger.log(`🗣️ Debate iniciado para respuesta de ${data.playerName}`, data)
       toast.warning(`🗣️ Debate: ${data.message}`, { duration: 5000 })
       
       // Convertir array de votos a Map
@@ -457,7 +470,7 @@ export function useGameSocket() {
         newScore: number
         message: string
       }
-      console.log(`👨‍⚖️ Debate resuelto por ${data.moderatorName}: ${data.message}`)
+      logger.log(`👨‍⚖️ Debate resuelto por ${data.moderatorName}: ${data.message}`)
       
       if (data.pointsGranted) {
         toast.success(`✅ ${data.message} - ${data.playerName} ganó ${data.pointsEarned} puntos`)
@@ -481,7 +494,7 @@ export function useGameSocket() {
     }
 
     const handleRoomUpdated = (data: unknown) => {
-      console.log('🔄 Sala actualizada:', data)
+      logger.log('🔄 Sala actualizada:', data)
       const updateData = data as { currentPhase?: string; gameState?: { phase?: string } }
       
       setGameRoom(prev => {
@@ -491,7 +504,7 @@ export function useGameSocket() {
         
         // Si la fase cambió a FINISHED, asegurar que se refleje correctamente
         if (updateData.currentPhase === 'FINISHED' || updateData.gameState?.phase === 'FINISHED') {
-          console.log('🏁 Juego terminado detectado en room-updated')
+          logger.log('🏁 Juego terminado detectado en room-updated')
           updated.currentPhase = 'FINISHED'
           if (updated.gameState) {
             updated.gameState.phase = 'FINISHED'

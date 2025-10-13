@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { logger } from '@/lib/logger'
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
 
@@ -16,7 +17,7 @@ export function useSocket() {
     if (isInitialized.current) return
     isInitialized.current = true
     
-    console.log('🔌 Inicializando socket...')
+    logger.log('🔌 Inicializando socket...')
     const socket = io(SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
@@ -28,33 +29,33 @@ export function useSocket() {
     socketRef.current = socket
 
     socket.on('connect', () => {
-      console.log('🔌 Conectado al servidor')
+      logger.log('🔌 Conectado al servidor')
       setIsConnected(true)
       setError(null)
     })
 
     // Debug: Escuchar todos los eventos phase-changed
     socket.on('phase-changed', (data) => {
-      console.log('🔄 [useSocket] phase-changed recibido:', data)
+      logger.log('🔄 [useSocket] phase-changed recibido:', data)
     })
 
     socket.on('disconnect', (reason) => {
-      console.log('🔌 Desconectado del servidor:', reason)
+      logger.log('🔌 Desconectado del servidor:', reason)
       setIsConnected(false)
     })
 
     socket.on('error', (errorData: { message: string }) => {
-      console.error('❌ Error de Socket:', errorData.message)
+      logger.error('❌ Error de Socket:', errorData.message)
       setError(errorData.message)
     })
 
     socket.on('connect_error', (error) => {
-      console.error('❌ Error de conexión:', error.message)
+      logger.error('❌ Error de conexión:', error.message)
       setError('Error de conexión con el servidor')
     })
 
     return () => {
-      console.log('🔌 Limpiando socket...')
+      logger.log('🔌 Limpiando socket...')
       socket.disconnect()
       socketRef.current = null
       isInitialized.current = false
@@ -63,10 +64,10 @@ export function useSocket() {
 
   const emit = (event: string, data?: unknown) => {
     if (socketRef.current?.connected) {
-      console.log(`📤 Enviando evento: ${event}`, data)
+      logger.log(`📤 Enviando evento: ${event}`, data)
       socketRef.current.emit(event, data)
     } else {
-      console.warn('⚠️ Socket no conectado, no se puede enviar:', event)
+      logger.warn('⚠️ Socket no conectado, no se puede enviar:', event)
     }
   }
 

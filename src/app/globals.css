@@ -44,50 +44,147 @@
 }
 
 :root {
+  /* ========================================
+     SISTEMA DE COLORES CONECTANDO+
+     Basado en el logo oficial (fondo2.png)
+     Paleta: Amarillo #E8B919, Rosa #E8C5D6, Azul #4A7FB8, Verde #5BA891
+     ======================================== */
+
   --radius: 0.625rem;
-  --background: oklch(0.98 0.01 85);
-  --foreground: oklch(0.15 0.02 280);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 280);
+
+  /* ===== COLORES DE MARCA (Logo Oficial) ===== */
+  /* Amarillo/Dorado - Energía, Aprendizaje (#E8B919) */
+  --brand-yellow-50: oklch(0.98 0.02 90);
+  --brand-yellow-100: oklch(0.95 0.05 90);
+  --brand-yellow-200: oklch(0.90 0.08 90);
+  --brand-yellow-300: oklch(0.85 0.12 90);
+  --brand-yellow-400: oklch(0.78 0.15 88);  /* Base del logo */
+  --brand-yellow-500: oklch(0.72 0.16 85);
+  --brand-yellow-600: oklch(0.62 0.14 82);
+  --brand-yellow-700: oklch(0.52 0.12 80);
+  --brand-yellow-800: oklch(0.42 0.10 78);
+  --brand-yellow-900: oklch(0.32 0.08 75);
+  --brand-yellow-950: oklch(0.22 0.05 72);
+
+  /* Rosa Suave - Empatía, Sensibilidad (#E8C5D6) */
+  --brand-pink-50: oklch(0.98 0.02 340);
+  --brand-pink-100: oklch(0.95 0.03 340);
+  --brand-pink-200: oklch(0.92 0.05 340);
+  --brand-pink-300: oklch(0.88 0.07 340);
+  --brand-pink-400: oklch(0.84 0.08 340);  /* Base del logo */
+  --brand-pink-500: oklch(0.78 0.10 338);
+  --brand-pink-600: oklch(0.68 0.12 335);
+  --brand-pink-700: oklch(0.58 0.14 332);
+  --brand-pink-800: oklch(0.48 0.12 330);
+  --brand-pink-900: oklch(0.38 0.10 328);
+  --brand-pink-950: oklch(0.28 0.08 325);
+
+  /* Azul Medio - Confianza, Comunicación (#4A7FB8) */
+  --brand-blue-50: oklch(0.97 0.02 230);
+  --brand-blue-100: oklch(0.93 0.04 230);
+  --brand-blue-200: oklch(0.87 0.08 228);
+  --brand-blue-300: oklch(0.78 0.12 226);
+  --brand-blue-400: oklch(0.68 0.14 224);
+  --brand-blue-500: oklch(0.60 0.15 222);  /* Base del logo */
+  --brand-blue-600: oklch(0.52 0.14 220);
+  --brand-blue-700: oklch(0.44 0.12 218);
+  --brand-blue-800: oklch(0.36 0.10 216);
+  --brand-blue-900: oklch(0.28 0.08 214);
+  --brand-blue-950: oklch(0.20 0.06 212);
+
+  /* Verde Agua - Crecimiento, Equilibrio (#5BA891) */
+  --brand-green-50: oklch(0.97 0.02 170);
+  --brand-green-100: oklch(0.93 0.04 168);
+  --brand-green-200: oklch(0.87 0.07 166);
+  --brand-green-300: oklch(0.80 0.10 164);
+  --brand-green-400: oklch(0.73 0.11 162);
+  --brand-green-500: oklch(0.68 0.12 160);  /* Base del logo */
+  --brand-green-600: oklch(0.60 0.12 158);
+  --brand-green-700: oklch(0.52 0.11 156);
+  --brand-green-800: oklch(0.44 0.09 154);
+  --brand-green-900: oklch(0.36 0.07 152);
+  --brand-green-950: oklch(0.28 0.05 150);
+
+  /* ===== COLORES FUNCIONALES (UI) ===== */
+  /* Backgrounds & Surfaces */
+  --background: oklch(0.98 0.005 90);  /* Blanco cremoso del logo */
+  --foreground: oklch(0.20 0.01 240);  /* Texto oscuro con hint azul */
+
+  --card: oklch(1 0 0);  /* Blanco puro para tarjetas */
+  --card-foreground: oklch(0.20 0.01 240);
+
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 280);
-  
-  /* Colores principales basados en la imagen 65.png */
-  --primary: oklch(0.55 0.15 220); /* Azul principal */
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.85 0.08 340); /* Rosa claro */
-  --secondary-foreground: oklch(0.15 0.02 280);
-  
-  /* Colores de las 4 categorías del juego */
-  --yellow-card: oklch(0.8 0.15 85); /* Amarillo - Resolución de Conflictos */
-  --pink-card: oklch(0.85 0.08 340); /* Rosa - Autoconocimiento */
-  --blue-card: oklch(0.55 0.15 220); /* Azul - Empatía */
-  --green-card: oklch(0.65 0.12 160); /* Verde - Comunicación Efectiva */
-  
-  --muted: oklch(0.95 0.02 85);
-  --muted-foreground: oklch(0.45 0.02 280);
-  --accent: oklch(0.65 0.12 160);
-  --accent-foreground: oklch(0.98 0.01 85);
-  --destructive: oklch(0.6 0.2 25);
-  --border: oklch(0.9 0.02 85);
-  --input: oklch(0.95 0.02 85);
-  --ring: oklch(0.55 0.15 220);
-  
-  /* Charts usando los colores del juego */
-  --chart-1: oklch(0.8 0.15 85); /* Amarillo */
-  --chart-2: oklch(0.85 0.08 340); /* Rosa */
-  --chart-3: oklch(0.55 0.15 220); /* Azul */
-  --chart-4: oklch(0.65 0.12 160); /* Verde */
-  --chart-5: oklch(0.7 0.1 200); /* Celeste */
-  
-  --sidebar: oklch(0.98 0.01 85);
-  --sidebar-foreground: oklch(0.15 0.02 280);
-  --sidebar-primary: oklch(0.55 0.15 220);
-  --sidebar-primary-foreground: oklch(0.98 0.01 85);
-  --sidebar-accent: oklch(0.95 0.02 85);
-  --sidebar-accent-foreground: oklch(0.15 0.02 280);
-  --sidebar-border: oklch(0.9 0.02 85);
-  --sidebar-ring: oklch(0.55 0.15 220);
+  --popover-foreground: oklch(0.20 0.01 240);
+
+  /* Primary - Azul del logo (default para acciones principales) */
+  --primary: var(--brand-blue-500);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Secondary - Rosa del logo (acciones secundarias) */
+  --secondary: var(--brand-pink-400);
+  --secondary-foreground: oklch(0.25 0.01 240);
+
+  /* Accent - Verde agua del logo (highlights y CTAs especiales) */
+  --accent: var(--brand-green-500);
+  --accent-foreground: oklch(0.99 0 0);
+
+  /* Muted - Neutros suaves */
+  --muted: oklch(0.96 0.005 90);
+  --muted-foreground: oklch(0.50 0.01 240);
+
+  /* States */
+  --destructive: oklch(0.58 0.22 27);  /* Rojo para errores */
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --success: var(--brand-green-600);  /* Verde para éxito */
+  --success-foreground: oklch(0.99 0 0);
+
+  --warning: var(--brand-yellow-500);  /* Amarillo para advertencias */
+  --warning-foreground: oklch(0.25 0.01 240);
+
+  --info: var(--brand-blue-400);  /* Azul para información */
+  --info-foreground: oklch(0.99 0 0);
+
+  /* Borders & Inputs */
+  --border: oklch(0.92 0.005 240);
+  --input: oklch(0.96 0.005 240);
+  --ring: var(--brand-blue-500);
+
+  /* ===== CATEGORÍAS DE JUEGO (4 colores del logo) ===== */
+  --category-rc: var(--brand-yellow-400);  /* Resolución de Conflictos */
+  --category-rc-foreground: oklch(0.25 0.01 240);
+
+  --category-ac: var(--brand-pink-400);  /* Autoconocimiento */
+  --category-ac-foreground: oklch(0.25 0.01 240);
+
+  --category-e: var(--brand-blue-500);  /* Empatía */
+  --category-e-foreground: oklch(0.99 0 0);
+
+  --category-ce: var(--brand-green-500);  /* Comunicación Efectiva */
+  --category-ce-foreground: oklch(0.99 0 0);
+
+  /* Aliases para compatibilidad con código existente */
+  --yellow-card: var(--category-rc);
+  --pink-card: var(--category-ac);
+  --blue-card: var(--category-e);
+  --green-card: var(--category-ce);
+
+  /* ===== CHARTS (usando colores de marca) ===== */
+  --chart-1: var(--brand-yellow-400);
+  --chart-2: var(--brand-pink-400);
+  --chart-3: var(--brand-blue-500);
+  --chart-4: var(--brand-green-500);
+  --chart-5: oklch(0.75 0.10 200);  /* Azul celeste complementario */
+
+  /* ===== SIDEBAR ===== */
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--brand-blue-500);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
@@ -131,4 +228,196 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ===== GRADIENTES PERSONALIZADOS (Basados en logo) ===== */
+.bg-gradient-hero-top {
+  background: linear-gradient(135deg, var(--brand-yellow-400) 0%, var(--brand-pink-400) 50%, var(--brand-blue-500) 100%);
+}
+
+.bg-gradient-hero-bottom {
+  background: linear-gradient(135deg, var(--brand-green-500) 0%, var(--brand-blue-500) 50%, var(--brand-blue-400) 100%);
+}
+
+.bg-gradient-hero-center {
+  background: linear-gradient(to right, var(--brand-blue-500), var(--brand-blue-400));
+}
+
+.bg-gradient-warm {
+  background: linear-gradient(135deg, var(--brand-yellow-300) 0%, var(--brand-pink-300) 100%);
+}
+
+.bg-gradient-cool {
+  background: linear-gradient(135deg, var(--brand-blue-400) 0%, var(--brand-green-400) 100%);
+}
+
+/* ===== ESTADOS DE JUEGO ===== */
+.bg-game-waiting {
+  background-color: oklch(from var(--brand-green-500) l c h / 0.1);
+}
+
+.bg-game-in-progress {
+  background-color: oklch(from var(--brand-blue-500) l c h / 0.1);
+}
+
+.bg-game-finished {
+  background-color: oklch(from var(--brand-blue-950) l c h / 0.05);
+}
+
+/* Colores de texto del juego */
+.text-game-primary {
+  color: var(--brand-blue-800);
+}
+
+.text-game-secondary {
+  color: var(--brand-blue-600);
+}
+
+.text-game-muted {
+  color: var(--brand-blue-400);
+}
+
+.text-game-success {
+  color: var(--brand-green-600);
+}
+
+/* Bordes de estado de juego */
+.border-game-waiting {
+  border-color: oklch(from var(--brand-green-500) l c h / 0.3);
+}
+
+.border-game-in-progress {
+  border-color: oklch(from var(--brand-blue-500) l c h / 0.3);
+}
+
+.border-game-finished {
+  border-color: oklch(from var(--brand-blue-800) l c h / 0.2);
+}
+
+/* ===== ESTADOS DE VOTACIÓN/PUNTOS ===== */
+.bg-winner-badge {
+  background-color: oklch(from var(--brand-yellow-400) l c h / 0.1);
+}
+
+.text-winner {
+  color: var(--brand-yellow-600);
+}
+
+.bg-loser-badge {
+  background-color: oklch(from var(--brand-blue-900) l c h / 0.1);
+}
+
+.text-loser {
+  color: var(--brand-blue-700);
+}
+
+/* ===== BOTONES DE ACCIÓN DEL JUEGO ===== */
+.btn-game-primary {
+  background-color: var(--brand-blue-500);
+  color: var(--primary-foreground);
+  border: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-game-primary:hover {
+  background-color: var(--brand-blue-600);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.btn-game-secondary {
+  background-color: var(--brand-pink-400);
+  color: var(--secondary-foreground);
+  border: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-game-secondary:hover {
+  background-color: var(--brand-pink-500);
+}
+
+.btn-game-continue {
+  background-color: var(--brand-green-500);
+  color: var(--accent-foreground);
+  border: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-game-continue:hover {
+  background-color: var(--brand-green-600);
+}
+
+.btn-game-disabled {
+  background-color: oklch(from var(--brand-blue-800) l c h / 0.6);
+  cursor: not-allowed;
+}
+
+/* ===== SPINNER DE CARGA ===== */
+.spinner-game {
+  border-color: var(--brand-blue-500);
+}
+
+/* ===== ICONOS CON COLORES DEL JUEGO ===== */
+.icon-game-primary {
+  color: var(--brand-blue-500);
+}
+
+.icon-game-success {
+  color: var(--brand-green-500);
+}
+
+.icon-game-warning {
+  color: var(--brand-yellow-500);
+}
+
+.icon-game-muted {
+  color: var(--brand-blue-400);
+}
+
+/* ===== BACKGROUNDS CON BACKDROP BLUR ===== */
+.bg-card-blur {
+  background-color: oklch(0.99 0 0 / 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.bg-card-lobby {
+  background-color: oklch(0.99 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* ===== CLASES DE CATEGORÍAS (Para componentes de tarjetas) ===== */
+.bg-category-rc {
+  background-color: var(--category-rc);
+  color: var(--category-rc-foreground);
+}
+
+.bg-category-ac {
+  background-color: var(--category-ac);
+  color: var(--category-ac-foreground);
+}
+
+.bg-category-e {
+  background-color: var(--category-e);
+  color: var(--category-e-foreground);
+}
+
+.bg-category-ce {
+  background-color: var(--category-ce);
+  color: var(--category-ce-foreground);
+}
+
+/* Bordes de categorías */
+.border-category-rc {
+  border-color: var(--brand-yellow-400);
+}
+
+.border-category-ac {
+  border-color: var(--brand-pink-400);
+}
+
+.border-category-e {
+  border-color: var(--brand-blue-500);
+}
+
+.border-category-ce {
+  border-color: var(--brand-green-500);
 }

@@ -28,7 +28,7 @@ export function ModeratorPanel({ playerRole, onEndGame, players }: ModeratorPane
   return (
     <>
       {/* Panel flotante */}
-      <div className="fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl shadow-2xl p-4 min-w-[280px] border-2 border-purple-400">
+      <div className="fixed bottom-4 left-4 z-30 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl shadow-2xl p-4 min-w-[280px] border-2 border-purple-400">
         {/* Header */}
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-purple-400">
           <Shield className="w-5 h-5 text-yellow-300" />
