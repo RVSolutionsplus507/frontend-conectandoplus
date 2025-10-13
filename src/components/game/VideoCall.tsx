@@ -82,13 +82,20 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
 
         console.log('✅ Event listeners set up');
 
+        // Preload devices to ensure tracks are available
+        console.log('📹 Preloading camera and microphone...');
+        try {
+          await callObject.startCamera();
+          console.log('✅ Camera and microphone preloaded');
+        } catch (err) {
+          console.error('⚠️ Error preloading camera:', err);
+        }
+
         // Join the meeting with video and audio enabled
         console.log('🔄 Attempting to join meeting...');
         const joinResponse = await callObject.join({
           url: roomUrl,
           userName: userName,
-          videoSource: true,  // Request camera access on join
-          audioSource: true,  // Request microphone access on join
         });
 
         console.log('✅ Join response:', joinResponse);
@@ -353,28 +360,14 @@ function ParticipantVideo({
     const setupTracks = async () => {
       // Set up video track
       if (videoRef.current && participant.video) {
+        const participantData = callObject.participants()[participant.id];
         let videoTrack: MediaStreamTrack | null = null;
 
-        // For local participant, use getLocalVideo()
-        if (participant.local) {
-          console.log(`🔍 Getting local video track for ${participant.user_name}...`);
-          try {
-            const localVideoState = await callObject.getLocalVideo();
-            console.log(`📹 Local video state:`, localVideoState);
+        console.log(`🔍 Setting up tracks for ${participant.user_name} (local: ${participant.local})`);
 
-            // Try to get the track from the participant data
-            const participantData = callObject.participants()[participant.id];
-            videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track || null;
-
-            console.log(`🔍 Local participant track found:`, !!videoTrack);
-          } catch (err) {
-            console.error('Error getting local video:', err);
-          }
-        } else {
-          // For remote participants, get from participant data
-          const participantData = callObject.participants()[participant.id];
-          videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track || null;
-        }
+        // Try to get the video track from participant data
+        videoTrack = participantData?.tracks?.video?.persistentTrack ||
+                    participantData?.tracks?.video?.track || null;
 
         if (videoTrack) {
           console.log(`🎥 Setting up video for ${participant.user_name} (local: ${participant.local})`);
