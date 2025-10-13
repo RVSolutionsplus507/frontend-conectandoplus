@@ -189,11 +189,11 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
 
   // Calculate grid layout based on number of participants
   const getGridLayout = (count: number) => {
-    if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-2';
-    if (count <= 4) return 'grid-cols-2 grid-rows-2';
-    if (count <= 6) return 'grid-cols-3 grid-rows-2';
-    return 'grid-cols-4 grid-rows-2';
+    if (count === 1) return 'grid-cols-1 min-h-[400px]';
+    if (count === 2) return 'grid-cols-1 md:grid-cols-2 min-h-[300px]'; // Más grande para 2 personas
+    if (count <= 4) return 'grid-cols-2 grid-rows-2 min-h-[500px]';
+    if (count <= 6) return 'grid-cols-2 md:grid-cols-3 grid-rows-2 min-h-[400px]';
+    return 'grid-cols-2 md:grid-cols-4 grid-rows-2 min-h-[350px]';
   };
 
   if (error) {
@@ -306,21 +306,38 @@ function ParticipantVideo({
   useEffect(() => {
     if (!callObject) return;
 
-    // Set up video track
-    if (videoRef.current && participant.video) {
-      const videoTrack = callObject.participants()[participant.id]?.tracks?.video?.persistentTrack;
-      if (videoTrack) {
-        videoRef.current.srcObject = new MediaStream([videoTrack]);
-      }
-    }
+    const setupTracks = () => {
+      // Set up video track
+      if (videoRef.current && participant.video) {
+        const participantData = callObject.participants()[participant.id];
+        const videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track;
 
-    // Set up audio track (only for remote participants)
-    if (audioRef.current && !participant.local && participant.audio) {
-      const audioTrack = callObject.participants()[participant.id]?.tracks?.audio?.persistentTrack;
-      if (audioTrack) {
-        audioRef.current.srcObject = new MediaStream([audioTrack]);
+        if (videoTrack) {
+          console.log(`🎥 Setting up video for ${participant.user_name} (local: ${participant.local})`);
+          videoRef.current.srcObject = new MediaStream([videoTrack]);
+
+          // Force play for local video
+          if (participant.local) {
+            videoRef.current.play().catch(err => console.error('Error playing local video:', err));
+          }
+        } else {
+          console.warn(`⚠️ No video track found for ${participant.user_name}`);
+        }
       }
-    }
+
+      // Set up audio track (only for remote participants)
+      if (audioRef.current && !participant.local && participant.audio) {
+        const participantData = callObject.participants()[participant.id];
+        const audioTrack = participantData?.tracks?.audio?.persistentTrack || participantData?.tracks?.audio?.track;
+
+        if (audioTrack) {
+          console.log(`🔊 Setting up audio for ${participant.user_name}`);
+          audioRef.current.srcObject = new MediaStream([audioTrack]);
+        }
+      }
+    };
+
+    setupTracks();
   }, [callObject, participant, participant.video, participant.audio]);
 
   return (
