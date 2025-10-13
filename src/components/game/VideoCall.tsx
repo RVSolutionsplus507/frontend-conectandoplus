@@ -66,9 +66,13 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
             console.log('🎬 Track started:', {
               participant: event?.participant?.user_name,
               type: event?.track?.kind,
-              local: event?.participant?.local
+              local: event?.participant?.local,
+              participantId: event?.participant?.session_id
             });
-            updateParticipants();
+            // Wait a bit before updating to ensure tracks are registered
+            setTimeout(() => {
+              updateParticipants();
+            }, 300);
           })
           .on('error', handleError)
           .on('loading', () => console.log('📡 Daily.co: Loading...'))
@@ -346,20 +350,31 @@ function ParticipantVideo({
   useEffect(() => {
     if (!callObject) return;
 
-    const setupTracks = () => {
+    const setupTracks = async () => {
       // Set up video track
       if (videoRef.current && participant.video) {
-        const participantData = callObject.participants()[participant.id];
-        console.log(`🔍 Participant data for ${participant.user_name}:`, {
-          id: participant.id,
-          local: participant.local,
-          hasTracks: !!participantData?.tracks,
-          hasVideo: !!participantData?.tracks?.video,
-          hasPersistentTrack: !!participantData?.tracks?.video?.persistentTrack,
-          hasTrack: !!participantData?.tracks?.video?.track
-        });
+        let videoTrack: MediaStreamTrack | null = null;
 
-        const videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track;
+        // For local participant, use getLocalVideo()
+        if (participant.local) {
+          console.log(`🔍 Getting local video track for ${participant.user_name}...`);
+          try {
+            const localVideoState = await callObject.getLocalVideo();
+            console.log(`📹 Local video state:`, localVideoState);
+
+            // Try to get the track from the participant data
+            const participantData = callObject.participants()[participant.id];
+            videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track || null;
+
+            console.log(`🔍 Local participant track found:`, !!videoTrack);
+          } catch (err) {
+            console.error('Error getting local video:', err);
+          }
+        } else {
+          // For remote participants, get from participant data
+          const participantData = callObject.participants()[participant.id];
+          videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track || null;
+        }
 
         if (videoTrack) {
           console.log(`🎥 Setting up video for ${participant.user_name} (local: ${participant.local})`);
@@ -373,11 +388,13 @@ function ParticipantVideo({
           console.warn(`⚠️ No video track found for ${participant.user_name}, will retry...`);
 
           // Retry after a short delay if tracks aren't available yet
-          const retryTimeout = setTimeout(() => {
-            console.log(`🔄 Retrying video track setup for ${participant.user_name}...`);
+          const retryTimeout = setTimeout(async () => {
+            console.log(`🔄 Retrying video track setup for ${participant.user_name}... (attempt 1)`);
+
+            let retryVideoTrack: MediaStreamTrack | null = null;
             const retryParticipantData = callObject.participants()[participant.id];
-            const retryVideoTrack = retryParticipantData?.tracks?.video?.persistentTrack ||
-                                   retryParticipantData?.tracks?.video?.track;
+            retryVideoTrack = retryParticipantData?.tracks?.video?.persistentTrack ||
+                             retryParticipantData?.tracks?.video?.track || null;
 
             if (retryVideoTrack && videoRef.current) {
               console.log(`✅ Video track found on retry for ${participant.user_name}`);
@@ -386,7 +403,26 @@ function ParticipantVideo({
                 videoRef.current.play().catch(err => console.error('Error playing local video:', err));
               }
             } else {
-              console.error(`❌ Still no video track after retry for ${participant.user_name}`);
+              console.warn(`⚠️ Track not found on first retry, trying again...`);
+
+              // Second retry after more time
+              setTimeout(() => {
+                console.log(`🔄 Retrying video track setup for ${participant.user_name}... (attempt 2)`);
+                const retry2ParticipantData = callObject.participants()[participant.id];
+                const retry2VideoTrack = retry2ParticipantData?.tracks?.video?.persistentTrack ||
+                                        retry2ParticipantData?.tracks?.video?.track || null;
+
+                if (retry2VideoTrack && videoRef.current) {
+                  console.log(`✅ Video track found on second retry for ${participant.user_name}`);
+                  videoRef.current.srcObject = new MediaStream([retry2VideoTrack]);
+                  if (participant.local) {
+                    videoRef.current.play().catch(err => console.error('Error playing local video:', err));
+                  }
+                } else {
+                  console.error(`❌ Still no video track after 2 retries for ${participant.user_name}`);
+                  console.error(`📊 Participant data:`, retry2ParticipantData);
+                }
+              }, 2000);
             }
           }, 1000);
 
