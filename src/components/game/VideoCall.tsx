@@ -14,6 +14,8 @@ interface VideoCallProps {
 }
 
 export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallProps) {
+  console.log('🎥 [VideoCall] Component rendered with props:', { roomUrl, userName, className });
+
   const callObjectRef = useRef<DailyCall | null>(null);
   const isInitializingRef = useRef(false);
   const [isJoining, setIsJoining] = useState(true);
@@ -21,12 +23,42 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
   const [localVideo, setLocalVideo] = useState(true);
   const [localAudio, setLocalAudio] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Daily.co call - separate effect that runs after render
+  console.log('🎥 [VideoCall] State:', { isJoining, error, hasCallObject: !!callObjectRef.current, isInitializing: isInitializingRef.current, isMounted });
+
+  // Track when component is fully mounted
   useEffect(() => {
-    if (!roomUrl || !iframeContainerRef.current) return;
+    console.log('🎥 [VideoCall] Component mounted, iframe container available');
+    setIsMounted(true);
+  }, []);
+
+  // Initialize Daily.co call - runs after component is mounted
+  useEffect(() => {
+    console.log('🎥 [VideoCall] useEffect triggered', {
+      roomUrl,
+      isMounted,
+      hasIframeContainer: !!iframeContainerRef.current,
+      hasCallObject: !!callObjectRef.current,
+      isInitializing: isInitializingRef.current
+    });
+
+    if (!roomUrl) {
+      console.log('⚠️ [VideoCall] No roomUrl, skipping initialization');
+      return;
+    }
+
+    if (!isMounted) {
+      console.log('⚠️ [VideoCall] Component not mounted yet, waiting...');
+      return;
+    }
+
+    if (!iframeContainerRef.current) {
+      console.log('⚠️ [VideoCall] No iframe container yet, waiting...');
+      return;
+    }
 
     // Prevent duplicate instances
     if (callObjectRef.current || isInitializingRef.current) {
@@ -92,7 +124,7 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
       console.log('✅ Component cleanup complete');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomUrl, userName]);
+  }, [roomUrl, userName, isMounted]);
 
   const handleError = useCallback((error: unknown) => {
     console.error('Daily.co error:', error);
@@ -143,29 +175,6 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
     onLeave?.();
   };
 
-  if (error) {
-    return (
-      <div className={cn('bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center', className)}>
-        <p className="text-red-500 font-medium">{error}</p>
-        <button
-          onClick={onLeave}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-        >
-          Cerrar
-        </button>
-      </div>
-    );
-  }
-
-  if (isJoining) {
-    return (
-      <div className={cn('bg-slate-900/50 border border-slate-700 rounded-xl p-8 text-center', className)}>
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4" />
-        <p className="text-slate-300">Conectando a videollamada...</p>
-      </div>
-    );
-  }
-
   return (
     <div
       ref={containerRef}
@@ -174,7 +183,32 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
         className
       )}
     >
-      {/* Daily.co Iframe Container */}
+      {/* Error State Overlay */}
+      {error && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/95">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center max-w-md">
+            <p className="text-red-500 font-medium">{error}</p>
+            <button
+              onClick={onLeave}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State Overlay */}
+      {isJoining && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/95">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4" />
+            <p className="text-slate-300">Conectando a videollamada...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Daily.co Iframe Container - ALWAYS RENDERED */}
       <div
         ref={iframeContainerRef}
         className="relative w-full min-h-[400px]"
