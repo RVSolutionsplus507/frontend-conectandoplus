@@ -62,6 +62,14 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
           .on('participant-joined', handleParticipantUpdate)
           .on('participant-updated', handleParticipantUpdate)
           .on('participant-left', handleParticipantLeft)
+          .on('track-started', (event) => {
+            console.log('🎬 Track started:', {
+              participant: event?.participant?.user_name,
+              type: event?.track?.kind,
+              local: event?.participant?.local
+            });
+            updateParticipants();
+          })
           .on('error', handleError)
           .on('loading', () => console.log('📡 Daily.co: Loading...'))
           .on('loaded', () => console.log('✅ Daily.co: Loaded'))
@@ -362,7 +370,27 @@ function ParticipantVideo({
             videoRef.current.play().catch(err => console.error('Error playing local video:', err));
           }
         } else {
-          console.warn(`⚠️ No video track found for ${participant.user_name}`);
+          console.warn(`⚠️ No video track found for ${participant.user_name}, will retry...`);
+
+          // Retry after a short delay if tracks aren't available yet
+          const retryTimeout = setTimeout(() => {
+            console.log(`🔄 Retrying video track setup for ${participant.user_name}...`);
+            const retryParticipantData = callObject.participants()[participant.id];
+            const retryVideoTrack = retryParticipantData?.tracks?.video?.persistentTrack ||
+                                   retryParticipantData?.tracks?.video?.track;
+
+            if (retryVideoTrack && videoRef.current) {
+              console.log(`✅ Video track found on retry for ${participant.user_name}`);
+              videoRef.current.srcObject = new MediaStream([retryVideoTrack]);
+              if (participant.local) {
+                videoRef.current.play().catch(err => console.error('Error playing local video:', err));
+              }
+            } else {
+              console.error(`❌ Still no video track after retry for ${participant.user_name}`);
+            }
+          }, 1000);
+
+          return () => clearTimeout(retryTimeout);
         }
       }
 
