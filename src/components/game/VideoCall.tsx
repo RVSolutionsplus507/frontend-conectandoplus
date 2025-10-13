@@ -75,14 +75,34 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
         const joinResponse = await callObject.join({
           url: roomUrl,
           userName: userName,
+          videoSource: true,  // Request camera access on join
+          audioSource: true,  // Request microphone access on join
         });
 
         console.log('✅ Join response:', joinResponse);
 
         // Explicitly enable video and audio after joining
-        await callObject.setLocalVideo(true);
-        await callObject.setLocalAudio(true);
-        console.log('✅ Video and audio enabled');
+        try {
+          await callObject.setLocalVideo(true);
+          console.log('✅ Video enabled');
+        } catch (videoError) {
+          console.error('❌ Error enabling video:', videoError);
+          console.error('⚠️ Por favor, asegúrate de permitir el acceso a la cámara cuando el navegador lo solicite.');
+        }
+
+        try {
+          await callObject.setLocalAudio(true);
+          console.log('✅ Audio enabled');
+        } catch (audioError) {
+          console.error('❌ Error enabling audio:', audioError);
+          console.error('⚠️ Por favor, asegúrate de permitir el acceso al micrófono cuando el navegador lo solicite.');
+        }
+
+        // Force update participants after enabling video/audio
+        setTimeout(() => {
+          console.log('🔄 Forcing participant update after video/audio enabled');
+          updateParticipants();
+        }, 500);
 
         setIsJoining(false);
       } catch (err) {
@@ -131,15 +151,27 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
     if (!callObjectRef.current) return;
 
     const participantsObj = callObjectRef.current.participants();
-    const participantsList: ParticipantTile[] = Object.values(participantsObj).map((p: DailyParticipant) => ({
-      id: p.session_id,
-      user_name: p.user_name || 'Jugador',
-      video: p.video,
-      audio: p.audio,
-      local: p.local,
-      screen: p.screen,
-    }));
+    console.log('👥 Raw participants from Daily.co:', participantsObj);
 
+    const participantsList: ParticipantTile[] = Object.values(participantsObj).map((p: DailyParticipant) => {
+      const participant = {
+        id: p.session_id,
+        user_name: p.user_name || 'Jugador',
+        video: p.video,
+        audio: p.audio,
+        local: p.local,
+        screen: p.screen,
+      };
+      console.log(`👤 Participant: ${participant.user_name}`, {
+        id: participant.id,
+        video: participant.video,
+        audio: participant.audio,
+        local: participant.local
+      });
+      return participant;
+    });
+
+    console.log(`✅ Total participants to render: ${participantsList.length}`);
     setParticipants(participantsList);
   };
 
@@ -310,6 +342,15 @@ function ParticipantVideo({
       // Set up video track
       if (videoRef.current && participant.video) {
         const participantData = callObject.participants()[participant.id];
+        console.log(`🔍 Participant data for ${participant.user_name}:`, {
+          id: participant.id,
+          local: participant.local,
+          hasTracks: !!participantData?.tracks,
+          hasVideo: !!participantData?.tracks?.video,
+          hasPersistentTrack: !!participantData?.tracks?.video?.persistentTrack,
+          hasTrack: !!participantData?.tracks?.video?.track
+        });
+
         const videoTrack = participantData?.tracks?.video?.persistentTrack || participantData?.tracks?.video?.track;
 
         if (videoTrack) {
