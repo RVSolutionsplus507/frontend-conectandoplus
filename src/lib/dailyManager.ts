@@ -18,7 +18,7 @@ class DailyManager {
     return DailyManager.instance;
   }
 
-  async getOrCreateCall(): Promise<DailyCall> {
+  async getOrCreateCall(containerElement?: HTMLElement | null): Promise<DailyCall> {
     // Wait if we're currently destroying
     while (this.isDestroying) {
       console.log('⏳ Waiting for previous call to be destroyed...');
@@ -31,12 +31,28 @@ class DailyManager {
       return this.callObject;
     }
 
-    // Create new call object
+    // Create new call object with frame if container provided
     console.log('🆕 Creating new Daily.co call object');
-    this.callObject = DailyIframe.createCallObject({
-      audioSource: true,
-      videoSource: true,
-    });
+    if (containerElement) {
+      console.log('📦 Creating with iframe container for reliable track access');
+      this.callObject = DailyIframe.createFrame(containerElement, {
+        showLeaveButton: false,
+        showFullscreenButton: false,
+        iframeStyle: {
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          border: '0',
+          borderRadius: '0.5rem',
+        },
+      });
+    } else {
+      console.log('🎯 Creating call object without container');
+      this.callObject = DailyIframe.createCallObject({
+        audioSource: true,
+        videoSource: true,
+      });
+    }
 
     return this.callObject;
   }
