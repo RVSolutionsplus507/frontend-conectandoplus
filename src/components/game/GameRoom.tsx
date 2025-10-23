@@ -361,38 +361,47 @@ export function GameRoom({ roomCode }: GameRoomProps) {
                   ))}
                 </div>
                 
-                {/* Botones de Categorías */}
+                {/* Botones de Categorías - Solo mostrar las permitidas */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-center mb-4">Conoce las Categorías de Cartas</h3>
                   <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto" role="group" aria-label="Categorías de cartas del juego">
-                    <Button
-                      onClick={() => openCategoryModal('RC')}
-                      className="bg-category-rc text-[var(--category-rc-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
-                      aria-label="Ver información de categoría Resolución de Conflictos"
-                    >
-                      <span aria-hidden="true">📋 </span>Resolución de Conflictos
-                    </Button>
-                    <Button
-                      onClick={() => openCategoryModal('AC')}
-                      className="bg-category-ac text-[var(--category-ac-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
-                      aria-label="Ver información de categoría Autoconocimiento"
-                    >
-                      <span aria-hidden="true">🧠 </span>Autoconocimiento
-                    </Button>
-                    <Button
-                      onClick={() => openCategoryModal('E')}
-                      className="bg-category-e text-[var(--category-e-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
-                      aria-label="Ver información de categoría Empatía"
-                    >
-                      <span aria-hidden="true">💝 </span>Empatía
-                    </Button>
-                    <Button
-                      onClick={() => openCategoryModal('CE')}
-                      className="bg-category-ce text-[var(--category-ce-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
-                      aria-label="Ver información de categoría Comunicación Efectiva"
-                    >
-                      <span aria-hidden="true">💬 </span>Comunicación Efectiva
-                    </Button>
+                    {/* Filtrar solo las categorías permitidas en esta partida */}
+                    {gameRoom?.gameState?.settings?.allowedCategories?.includes('RC') && (
+                      <Button
+                        onClick={() => openCategoryModal('RC')}
+                        className="bg-category-rc text-[var(--category-rc-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                        aria-label="Ver información de categoría Resolución de Conflictos"
+                      >
+                        <span aria-hidden="true">📋 </span>Resolución de Conflictos
+                      </Button>
+                    )}
+                    {gameRoom?.gameState?.settings?.allowedCategories?.includes('AC') && (
+                      <Button
+                        onClick={() => openCategoryModal('AC')}
+                        className="bg-category-ac text-[var(--category-ac-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                        aria-label="Ver información de categoría Autoconocimiento"
+                      >
+                        <span aria-hidden="true">🧠 </span>Autoconocimiento
+                      </Button>
+                    )}
+                    {gameRoom?.gameState?.settings?.allowedCategories?.includes('E') && (
+                      <Button
+                        onClick={() => openCategoryModal('E')}
+                        className="bg-category-e text-[var(--category-e-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                        aria-label="Ver información de categoría Empatía"
+                      >
+                        <span aria-hidden="true">💝 </span>Empatía
+                      </Button>
+                    )}
+                    {gameRoom?.gameState?.settings?.allowedCategories?.includes('CE') && (
+                      <Button
+                        onClick={() => openCategoryModal('CE')}
+                        className="bg-category-ce text-[var(--category-ce-foreground)] hover:opacity-90 px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 hover:scale-105"
+                        aria-label="Ver información de categoría Comunicación Efectiva"
+                      >
+                        <span aria-hidden="true">💬 </span>Comunicación Efectiva
+                      </Button>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500 text-center mt-4">
                     Lee las instrucciones de cada categoría antes de iniciar el juego

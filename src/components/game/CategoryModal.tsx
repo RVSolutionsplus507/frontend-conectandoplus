@@ -1,6 +1,6 @@
 'use client'
 
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import Image from 'next/image'
@@ -21,6 +21,9 @@ export function CategoryModal({ isOpen, onClose, category }: CategoryModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg p-4">
+        <DialogTitle className="sr-only">
+          Información de categoría: {category.name}
+        </DialogTitle>
         <div className="relative">
           {/* Botón cerrar en esquina superior derecha */}
           <Button

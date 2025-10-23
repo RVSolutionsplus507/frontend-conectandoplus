@@ -35,6 +35,12 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
     setIsMounted(true);
   }, []);
 
+  // Error handler - defined before useEffect to avoid dependency issues
+  const handleError = useCallback((error: unknown) => {
+    console.error('Daily.co error:', error);
+    setError('Error en la videollamada');
+  }, []);
+
   // Initialize Daily.co call - runs after component is mounted
   useEffect(() => {
     console.log('🎥 [VideoCall] useEffect triggered', {
@@ -123,13 +129,7 @@ export function VideoCall({ roomUrl, userName, onLeave, className }: VideoCallPr
 
       console.log('✅ Component cleanup complete');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomUrl, userName, isMounted]);
-
-  const handleError = useCallback((error: unknown) => {
-    console.error('Daily.co error:', error);
-    setError('Error en la videollamada');
-  }, []);
+  }, [roomUrl, userName, isMounted, handleError]);
 
   const toggleVideo = async () => {
     if (!callObjectRef.current) return;
